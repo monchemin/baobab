@@ -1,22 +1,23 @@
 <?php
-namespace Baobab\LowLevel;
+namespace FactorData;
 
 /*
 */
-
-final class MysqlManager implements DbManagerInterface {
+use PDO;
+final class FactorMysqlManager implements IFactorDbManager {
 
     
     protected $pdo;
 
-    private function __constuct($arrayConfig) {
-
+    protected function __construct($arrayConfig) {
+       
         try {
-            $this->pdo =  new PDO('mysql:host='+ $arrayConfig['host'] +';dbname='+ $arrayConfig['dbname'] +';charset=utf8', 
+            $this->pdo =  new PDO('mysql:host='. $arrayConfig['host'] . ';dbname='. $arrayConfig['dbname'] .';charset=utf8', 
                                     $arrayConfig['user'], 
                                     $arrayConfig['password'], 
                                     array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
                                 );
+                                
         } catch( Exception $pdoError)
         {
             die('Erreur : ' . $pdoError->getMessage());
@@ -25,28 +26,29 @@ final class MysqlManager implements DbManagerInterface {
     }
 
     
-
-    public function InsertData($queryString, $pamarsArray=null, $lastInsert=false) {
+    public function insertData($queryString, $pamarsArray=null, $lastInsert=false) {
+        
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoResult->execute($pamarsArray);
-                if( $pdoResult->rowCount() && $lastInsert ){ 
+                $pdoResult =  $pdoQuery->execute($pamarsArray);
+                
+                if( $pdoQuery->rowCount() && $lastInsert ){ 
                     //return result as array
-                    return $pdoResult->lastInsertId;
+                    return  $this->pdo->lastInsertId;
                 }
         } catch(PDOException $pdoError ) {
             
         }
     }
 
-    public function getData($queryString, $pamarsArray=null, $lastInsert=false) {
+    public function getData($queryString, $pamarsArray=null) {
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoResult->execute($pamarsArray);
-                if( $pdoResult->rowCount() ){ 
+                $pdoResult =  $pdoQuery->execute($pamarsArray);
+                if( $pdoQuery->rowCount() ){ 
                     //return result as array
-                    $arrayResult =  $pdoResult->fetch(PDO::FETCH_ASSOC);
-                    $pdoResult->closeCursor();
+                    $arrayResult =  $pdoQuery->fetchAll();
+                    $pdoQuery->closeCursor();
                     return $arrayResult;
                 }
         } catch(PDOException $pdoError ) {
@@ -55,11 +57,11 @@ final class MysqlManager implements DbManagerInterface {
     }
     
 
-    public function ModifyData($queryString, $pamarsArray=null){
+    public function ModifyData($queryString, $pamarsArray=null, $returnLine=false){
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoResult->execute($pamarsArray);
-                if( $pdoResult->rowCount() && $lastInsert ){ 
+                $pdoResult =  $pdoQuery->execute($pamarsArray);
+                if( $pdoQuery->rowCount() && $returnLine ){ 
                     //return result as array
                     return $pdoResult->lastInsertId;
                 }
@@ -75,8 +77,7 @@ final class MysqlManager implements DbManagerInterface {
     }
 
     public static function getConnexion($arrayConfig) {
-
-        return new DbManager($arrayConfig);
+        return new FactorMysqlManager($arrayConfig);
 
     }
 

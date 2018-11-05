@@ -1,7 +1,7 @@
 <?php
-namespace Baobab\Core;
+namespace FactorOperations;
 
-use Baobab\LowLevel\DbManagerInterface;
+//use Baobab\LowLevel\DbManagerInterface;
 
 class EntityManager {
 
