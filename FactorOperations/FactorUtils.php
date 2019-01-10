@@ -115,11 +115,13 @@ class FactorUtils {
 
 
     public static function makeGetDataQuery($strClassName, $fieldList, $whereArray, $orderByArray) {
+
         $filters = array();
         $whereClause = array();
         $orderBy = array();
         $queryValues = array();
-        $classProperties = get_class_vars($strClassName); 
+        $classProperties = get_class_vars($strClassName);
+
         foreach($classProperties as $property => $value) {
             $tableColumn = self::getTableColumn($strClassName, $property) !==null ? self::getTableColumn($strClassName, $property) : $property;
             if( in_array($property, $fieldList) ) $filters[] = $tableColumn;
@@ -145,7 +147,7 @@ class FactorUtils {
     
 
     protected static function getTableName($srtClassName) {
-       
+
         $reflectedClass = new \ReflectionClass($srtClassName);
         $classAnnotations = self::reader()->getClassAnnotations($reflectedClass);
         return $classAnnotations[0]->value;
@@ -165,6 +167,18 @@ class FactorUtils {
 
     protected static function reader () {
         return new AnnotationReader();
+    }
+
+    public static function getPropertyBindColumn($strClassName) {
+
+        $classProperties = get_class_vars($strClassName);
+        $bindArray = array();
+        foreach($classProperties as $property => $value) {
+            $tableColumn = self::getTableColumn($strClassName, $property) !==null ? self::getTableColumn($strClassName, $property) : $property;
+            $bindArray[$property] = $tableColumn;
+        }
+        return $bindArray;
+
     }
 }
 ?>

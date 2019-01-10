@@ -1,10 +1,10 @@
 <?php
 function loadClass($className) {
- 
+
     $fileArray = explode(DIRECTORY_SEPARATOR, $className);
     $searchFile = $fileArray[count($fileArray)-1].".php";
-    if( fileSearch(getcwd(), $searchFile) == null)  fileSearch(getcwd(), 'FactorAnnotations.php'); 
-   
+    if( fileSearch(getcwd(), $searchFile) == null)  fileSearch(dirname(getcwd()), $searchFile);
+
 }
 
 function fileSearch($dirName, $searchFile) {
@@ -20,13 +20,13 @@ function fileSearch($dirName, $searchFile) {
               //echo " trouve : ";
            // echo $path."-----";
             $trouve =  $path;
-            require_once($path); 
+            require_once($path);
             break;
           }
-       } 
+       }
        elseif (  $dirElement != "." && $dirElement != ".." ) {
-        //echo "isdir "; 
-        //echo $path. "<br />";  
+        //echo "isdir ";
+        //echo $path. "<br />";
         $dirArray[] = $path;
         fileSearch($path, $searchFile);
        }

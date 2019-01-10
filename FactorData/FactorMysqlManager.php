@@ -8,19 +8,24 @@ final class FactorMysqlManager implements IFactorDbManager {
 
     
     protected $pdo;
+    protected $operationResult;
+     CONST STATUS_OK = 200;
+     CONST STATUS_ERROR = 100;
 
     protected function __construct($arrayConfig) {
-       
+       $this->operationResult = new DataOperationResult();
         try {
             $this->pdo =  new PDO('mysql:host='. $arrayConfig['host'] . ';dbname='. $arrayConfig['dbname'] .';charset=utf8', 
                                     $arrayConfig['user'], 
                                     $arrayConfig['password'], 
                                     array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
                                 );
+            $this->operationResult->status = self::STATUS_OK;
                                 
-        } catch( Exception $pdoError)
+        } catch( \Exception $pdoError)
         {
-            die('Erreur : ' . $pdoError->getMessage());
+            $this->operationResult->errorMessage = $pdoError->getMessage();
+            $this->operationResult->status = self::STATUS_ERROR;
         }   
 
     }
@@ -30,29 +35,36 @@ final class FactorMysqlManager implements IFactorDbManager {
         
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoQuery->execute($pamarsArray);
+                $pdoQuery->execute($pamarsArray);
                 
                 if( $pdoQuery->rowCount() && $lastInsert ){ 
                     //return result as array
-                    return  $this->pdo->lastInsertId;
+                    return  $this->pdo->lastInsertId();
                 }
-        } catch(PDOException $pdoError ) {
-            
+                else {
+                    return true;
+                }
+
+        } catch(\PDOException $pdoError ) {
+            return $pdoError->getMessage();
         }
     }
 
     public function getData($queryString, $pamarsArray=null) {
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoQuery->execute($pamarsArray);
-                if( $pdoQuery->rowCount() ){ 
-                    //return result as array
-                    $arrayResult =  $pdoQuery->fetchAll();
-                    $pdoQuery->closeCursor();
-                    return $arrayResult;
+                $pdoQuery->execute($pamarsArray);
+                $this->operationResult->status = self::STATUS_OK;
+                if( $pdoQuery->rowCount() ){
+                    $this->operationResult->resultData =  $pdoQuery->fetchAll(PDO::FETCH_ASSOC);
                 }
-        } catch(PDOException $pdoError ) {
-            
+                else {
+                    $this->operationResult->resultData = array();
+                }
+            $pdoQuery->closeCursor();
+        } catch(\PDOException $pdoError ) {
+            $this->operationResult->errorMessage = $pdoError->getMessage();
+            $this->operationResult->status = self::STATUS_ERROR;
         }
     }
     
@@ -60,13 +72,15 @@ final class FactorMysqlManager implements IFactorDbManager {
     public function ModifyData($queryString, $pamarsArray=null, $returnLine=false){
         $pdoQuery = $this->pdo->prepare($queryString);
         try {
-                $pdoResult =  $pdoQuery->execute($pamarsArray);
-                if( $pdoQuery->rowCount() && $returnLine ){ 
-                    //return result as array
-                    return $pdoResult->lastInsertId;
+                $pdoQuery->execute($pamarsArray);
+                $this->operationResult->status = self::STATUS_OK;
+                if( $pdoQuery->rowCount() && $returnLine) {
+
+                        $this->operationResult->lastIndex = $this->pdo->lastInsertId();
                 }
-        } catch(PDOException $pdoError ) {
-            
+        } catch(\PDOException $pdoError ) {
+            $this->operationResult->errorMessage = $pdoError->getMessage();
+            $this->operationResult->status = self::STATUS_ERROR;
         }
     }
 
@@ -74,6 +88,10 @@ final class FactorMysqlManager implements IFactorDbManager {
 
     public function getTableInfo() {
         
+    }
+
+    public function operationResult(){
+        return $this->operationResult;
     }
 
     public static function getConnexion($arrayConfig) {

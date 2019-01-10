@@ -1,10 +1,10 @@
 <?php
 namespace FactorAnnotations;
-
+use Doctrine\Common\Annotations;
 /**
  * @Annotation 
  */
-final class TableName {
+ class TableName {
     public $value;
 
 }
@@ -12,7 +12,7 @@ final class TableName {
 /**
  * @Annotation 
  */
-final class TableColumn  {
+ class TableColumn  {
     public $columnName;
     public $isPK;
 }
